@@ -34,23 +34,33 @@ def setup_database():
     
     conn.commit()
     conn.close()
-    print(f"📁 Database ready: {DB_FILE}")
+    print(f"Database ready: {DB_FILE}")
 
 def on_connect(client, userdata, flags, rc):
     """Callback when MQTT client connects to broker"""
     if rc == 0:
-        print(f"✅ Connected to MQTT broker at {BROKER}:{PORT}")
+        print(f"Connected to MQTT broker at {BROKER}:{PORT}")
         # Subscribe to the sensor data topic
-        client.subscribe(TOPIC)
-        print(f"📡 Subscribed to topic: {TOPIC}")
+        result = client.subscribe(TOPIC)
+        print(f"Subscribed to topic: {TOPIC} (QoS: {result[0]})")
     else:
-        print(f"❌ Failed to connect to broker. Error code: {rc}")
+        print(f"Failed to connect to broker. Error code: {rc}")
+
+def on_subscribe(client, userdata, mid, granted_qos):
+    """Callback when subscription is successful"""
+    print(f"Successfully subscribed to topic (MsgID: {mid})")
 
 def on_message(client, userdata, msg):
     """Callback when a message is received from MQTT"""
     try:
+        # Show message details
+        print(f"Received message on topic: {msg.topic}")
+        print(f"Message ID: {msg.mid}, QoS: {msg.qos}")
+        
         # Decode the JSON message
         payload = msg.payload.decode('utf-8')
+        print(f"Raw payload: {payload}")
+        
         data = json.loads(payload)
         
         # Extract sensor values
@@ -74,10 +84,13 @@ def on_message(client, userdata, msg):
         conn.close()
         
         # Print what we received and stored
-        print(f"💾 Stored: Temp={temperature}°C, Pressure={pressure} bar from {unit_id}")
+        print(f"Stored: Temp={temperature}°C, Pressure={pressure} bar from {unit_id}")
+        print(f"Received at: {received_at}")
+        print("─" * 50)
         
     except Exception as e:
         print(f"❌ Error processing message: {e}")
+        print(f"Raw payload was: {msg.payload}")
 
 def main():
     """Main function - sets up database and MQTT subscriber"""
@@ -87,19 +100,20 @@ def main():
     # Create MQTT client
     client = mqtt.Client()
     client.on_connect = on_connect
+    client.on_subscribe = on_subscribe
     client.on_message = on_message
     
     try:
         # Connect to broker
-        print(f"🔄 Connecting to MQTT broker at {BROKER}:{PORT}")
+        print(f"Connecting to MQTT broker at {BROKER}:{PORT}")
         client.connect(BROKER, PORT, 60)
         
         # Start listening for messages (blocking call)
-        print("👂 Listening for sensor data...")
+        print("Listening for sensor data...")
         client.loop_forever()
         
     except KeyboardInterrupt:
-        print("\n🛑 Shutting down database subscriber...")
+        print("\nShutting down database subscriber...")
         client.disconnect()
 
 if __name__ == "__main__":

@@ -18,9 +18,14 @@ PUBLISH_INTERVAL = 3                       # Publish every 3 seconds
 def on_connect(client, userdata, flags, rc):
     """Callback when MQTT client connects to broker"""
     if rc == 0:
-        print(f"✅ Connected to MQTT broker at {BROKER}:{PORT}")
+        print(f"Connected to MQTT broker at {BROKER}:{PORT}")
+        print(f" Publish to topic: {TOPIC}")
     else:
-        print(f"❌ Failed to connect to broker. Error code: {rc}")
+        print(f"Failed to connect to broker. Error code: {rc}")
+
+def on_publish(client, userdata, mid):
+    """Callback when message is successfully published"""
+    print(f"Message {mid} published successfully to {TOPIC}")
 
 def generate_sensor_data():
     """Generate simulated sensor readings"""
@@ -45,10 +50,11 @@ def main():
     # Create MQTT client
     client = mqtt.Client()
     client.on_connect = on_connect
+    client.on_publish = on_publish
     
     try:
         # Connect to broker
-        print(f"🔄 Connecting to MQTT broker at {BROKER}:{PORT}")
+        print(f"Connecting to MQTT broker at {BROKER}:{PORT}")
         client.connect(BROKER, PORT, 60)
         client.loop_start()  # Start background network loop
         
@@ -61,17 +67,18 @@ def main():
             payload = json.dumps(sensor_data)
             
             # Publish to MQTT topic
-            client.publish(TOPIC, payload)
+            result = client.publish(TOPIC, payload)
             
-            # Print what we sent
-            print(f"📤 Published: Temp={sensor_data['temperature']}°C, "
-                  f"Pressure={sensor_data['pressure']} bar")
+            # Print what we sent with message ID
+            print(f"Publishing: Temp={sensor_data['temperature']}°C, "
+                  f"Pressure={sensor_data['pressure']} bar (MsgID: {result.mid})")
+            print(f"Payload: {payload}")
             
             # Wait before next reading
             time.sleep(PUBLISH_INTERVAL)
             
     except KeyboardInterrupt:
-        print("\n🛑 Shutting down PLC publisher...")
+        print("\nShutting down PLC publisher...")
         client.loop_stop()
         client.disconnect()
 

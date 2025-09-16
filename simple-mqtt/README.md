@@ -20,11 +20,13 @@ PLC Publisher → MQTT Broker → Database Subscriber
 
 2. **View logs to see data flow:**
    ```bash
-   # PLC publishing data
-   docker-compose logs -f plc_publisher
+   # See all traffic (recommended for demos)
+   docker-compose logs -f
    
-   # Database receiving data  
-   docker-compose logs -f database_subscriber
+   # Or view individual components:
+   docker-compose logs -f mqtt_broker      # Broker message routing
+   docker-compose logs -f plc_publisher    # PLC publishing data
+   docker-compose logs -f database_subscriber  # Database receiving data
    ```
 
 3. **Stop the demo:**
@@ -90,3 +92,25 @@ def on_message(client, userdata, msg):
 - **JSON Payloads**: Structured data exchange
 
 This demo shows the core MQTT pattern: devices publish data to topics, and applications subscribe to topics to receive that data, all coordinated by a central broker.
+
+## What You'll See in the Logs
+
+When you run `docker-compose logs -f`, you'll see:
+
+**MQTT Broker:**
+- Connection messages when clients connect/disconnect
+- Message routing details (publish/subscribe events)
+- Debug information about message flow
+
+**PLC Publisher:**
+- Connection status to broker
+- Each message being published with payload
+- Message IDs for tracking
+
+**Database Subscriber:**
+- Connection and subscription status
+- Detailed message reception info
+- Database storage confirmations
+- Raw JSON payloads being processed
+
+The logs will show the complete data flow: PLC → Broker → Database with full visibility into the MQTT message exchange.
