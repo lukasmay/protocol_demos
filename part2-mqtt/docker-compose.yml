@@ -1,0 +1,57 @@
+services:
+  # MQTT Broker - Handles QoS=1 message routing and acknowledgments
+  mqtt_broker_qos1:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt_broker_qos1
+    ports:
+      - "1884:1883"  # Use different port to avoid conflict with simple-mqtt
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mqtt_data_qos1:/mosquitto/data
+    restart: unless-stopped
+    networks:
+      - mqtt_network_qos1
+
+  # PLC Publisher - Sends data with QoS=1 and waits for PUBACK
+  plc_publisher_qos1:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: plc_publisher_qos1
+    volumes:
+      - ./plc1.py:/app/main.py  # Mount our QoS=1 PLC code
+    depends_on:
+      - mqtt_broker_qos1  # Wait for broker to start first
+    environment:
+      - BROKER=mqtt_broker_qos1  # Connect to our broker container
+      - PORT=1883
+    restart: unless-stopped
+    networks:
+      - mqtt_network_qos1
+
+  # Database Subscriber - Receives QoS=1 messages with auto-acknowledgment
+  database_subscriber_qos1:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: database_subscriber_qos1
+    volumes:
+      - ./database_subscriber.py:/app/main.py  # Mount our QoS=1 database code
+      - database_data_qos1:/app/data  # Persistent storage for database
+    depends_on:
+      - mqtt_broker_qos1  # Wait for broker to start first
+    environment:
+      - BROKER=mqtt_broker_qos1  # Connect to our broker container
+      - PORT=1883
+      - DB_FILE=/app/data/sensor_data.db  # Database file location
+    restart: unless-stopped
+    networks:
+      - mqtt_network_qos1
+
+networks:
+  mqtt_network_qos1:
+    driver: bridge
+
+volumes:
+  mqtt_data_qos1:      # Persistent storage for MQTT broker
+  database_data_qos1:  # Persistent storage for database

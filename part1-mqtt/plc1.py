@@ -47,14 +47,15 @@ def generate_sensor_data():
 
 def main():
     """Main function - sets up MQTT client and publishes data"""
-    # Create MQTT client
-    client = mqtt.Client()
+    # Create MQTT client with unique ID
+    client_id = "PLC_Publisher_QoS0"
+    client = mqtt.Client(client_id=client_id)
     client.on_connect = on_connect
     client.on_publish = on_publish
     
     try:
         # Connect to broker
-        print(f"Connecting to MQTT broker at {BROKER}:{PORT}")
+        print(f"Connecting to MQTT broker at {BROKER}:{PORT} with Client ID: {client_id}")
         client.connect(BROKER, PORT, 60)
         client.loop_start()  # Start background network loop
         
