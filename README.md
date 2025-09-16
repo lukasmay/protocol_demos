@@ -1,6 +1,9 @@
 # OT Networking Protocols Demos
 This repository contains all the Industrial Protocol Demos for the [RITSEC OT Security Interest Group](https://ritsec.club/groups#:~:text=presentations%20and%20demos.-,OT%20Security,-Tuesday%205%3A00) meeting on OT Protocols.
 
+## Modbus RTU Demo
+Go to `modbus/modbus-rtu-demo.md`, the instructions for how to install and setup the demo are in that file.
+
 ## MQTT Protocol Demos
 
 This repository includes three comprehensive MQTT demonstrations showcasing different Quality of Service (QoS) levels:
