@@ -1,0 +1,57 @@
+services:
+  # MQTT Broker - Handles message routing between publisher and subscriber
+  mqtt_broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt_broker
+    ports:
+      - "1883:1883"  # Expose MQTT port to host
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mqtt_data:/mosquitto/data
+    restart: unless-stopped
+    networks:
+      - mqtt_network
+
+  # PLC Publisher - Simulates industrial sensor sending data
+  plc_publisher:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: plc_publisher
+    volumes:
+      - ./plc1.py:/app/main.py  # Mount our simplified PLC code
+    depends_on:
+      - mqtt_broker  # Wait for broker to start first
+    environment:
+      - BROKER=mqtt_broker  # Connect to our broker container
+      - PORT=1883
+    restart: unless-stopped
+    networks:
+      - mqtt_network
+
+  # Database Subscriber - Receives and stores sensor data
+  database_subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: database_subscriber
+    volumes:
+      - ./database_subscriber.py:/app/main.py  # Mount our database code
+      - database_data:/app/data  # Persistent storage for database
+    depends_on:
+      - mqtt_broker  # Wait for broker to start first
+    environment:
+      - BROKER=mqtt_broker  # Connect to our broker container
+      - PORT=1883
+      - DB_FILE=/app/data/sensor_data.db  # Database file location
+    restart: unless-stopped
+    networks:
+      - mqtt_network
+
+networks:
+  mqtt_network:
+    driver: bridge
+
+volumes:
+  mqtt_data:      # Persistent storage for MQTT broker
+  database_data:  # Persistent storage for database
