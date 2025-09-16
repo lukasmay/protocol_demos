@@ -1,6 +1,10 @@
 # OT Networking Protocols Demos
 This repository contains all the Industrial Protocol Demos for the [RITSEC OT Security Interest Group](https://ritsec.club/groups#:~:text=presentations%20and%20demos.-,OT%20Security,-Tuesday%205%3A00) meeting on OT Protocols.
 
+## OPC UA Demo
+The demo used in the presentation is just server and client example but there are many more in the provided repo.
+[Demo Repository](https://github.com/FreeOpcUa/opcua-asyncio)
+
 ## Modbus RTU Demo
 Go to `modbus/modbus-rtu-demo.md`, the instructions for how to install and setup the demo are in that file.
 
